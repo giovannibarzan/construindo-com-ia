@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="robots" content="index, follow" />
+  <title>Construindo com IA - Comunidade de Vibe Coding e IA</title>
+  <meta name="description"
+    content="A maior comunidade de Vibe Coding e IA do Brasil. Acesso exclusivo a cursos, ferramentas e network de alto nível." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Construindo com IA" />
+  <meta property="og:description"
+    content="Comunidade exclusiva de IA e Vibe Coding com cursos, ferramentas e network de alto nível." />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Construindo com IA" />
+  <meta name="twitter:description" content="Comunidade exclusiva de IA e Vibe Coding" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+              DEFAULT: '#3b82f6',
+            },
+            secondary: {
+              purple: '#8b5cf6',
+              pink: '#ec4899',
+              orange: '#f97316',
+            },
+            accent: {
+              green: '#10b981',
+              yellow: '#fbbf24',
+              red: '#ef4444',
+            },
+            "background-light": "#f6f7f8",
+            "background-dark": "#101922",
+            "card-dark": "#15202B",
+          },
+          backgroundImage: {
+            'gradient-primary': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'gradient-premium': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'gradient-success': 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)',
+            'gradient-mesh': 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          },
+          boxShadow: {
+            'glow': '0 0 20px rgba(102, 126, 234, 0.3)',
+            'glow-lg': '0 0 30px rgba(102, 126, 234, 0.5)',
+            'premium': '0 20px 40px rgba(0, 0, 0, 0.2)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.1",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.87.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?external=react,react-dom",
+    "@remix-run/router": "https://esm.sh/@remix-run/router@1.15.3"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body
+  class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 transition-colors duration-200">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

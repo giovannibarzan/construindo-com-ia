@@ -1,0 +1,564 @@
+
+import React, { useState, useEffect } from 'react';
+import { Tool, User } from '../../types';
+import { backend } from '../../services/backend';
+import ToolCard from '../ToolCard';
+
+interface ToolsViewProps {
+    currentUser?: User | null;
+}
+
+const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
+    const [tools, setTools] = useState<Tool[]>([]);
+    const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Filters
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('Todas');
+
+    // Load tools
+    useEffect(() => {
+        backend.getTools().then(data => {
+            setTools(data);
+            setLoading(false);
+        });
+    }, []);
+
+    // Handle URL-based tool selection (SEO-friendly URLs)
+    useEffect(() => {
+        const path = window.location.pathname;
+        const toolSlugMatch = path.match(/\/tools\/([^\/]+)/);
+
+        if (toolSlugMatch && tools.length > 0) {
+            const slug = toolSlugMatch[1];
+            const tool = tools.find(t =>
+                t.name.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase()
+            );
+            if (tool && tool.id !== selectedTool?.id) {
+                setSelectedTool(tool);
+            }
+        } else if (!toolSlugMatch && selectedTool) {
+            // URL changed to /tools without slug, clear selection
+            setSelectedTool(null);
+        }
+    }, [tools, window.location.pathname]);
+
+    // Update URL when tool is selected
+    const handleSelectTool = (tool: Tool) => {
+        const slug = tool.name.toLowerCase().replace(/\s+/g, '-');
+        window.history.pushState({}, '', `/tools/${slug}`);
+        setSelectedTool(tool);
+    };
+
+    // Clear selection and reset URL
+    const handleBackToList = () => {
+        window.history.pushState({}, '', '/tools');
+        setSelectedTool(null);
+    };
+
+    const categories = ['Todas', ...Array.from(new Set(tools.map(t => t.category)))];
+
+    const filteredTools = tools.filter(tool => {
+        const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            tool.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'Todas' || tool.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    const featuredTool = tools.length > 0 ? tools.reduce((prev, current) => (prev.rating > current.rating) ? prev : current) : null;
+    const listTools = filteredTools.filter(t => t.id !== featuredTool?.id);
+
+    // -- DETAIL VIEW (FULL PAGE OVERLAY) --
+    if (selectedTool) {
+        const videoId = selectedTool.relatedVideoUrl?.split('embed/')[1] || selectedTool.relatedVideoUrl?.split('v=')[1];
+        const safeVideoUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+
+        return (
+            <div className="flex flex-col animate-in fade-in slide-in-from-right-8 duration-300 pb-20">
+                {/* Navigation */}
+                <button
+                    onClick={handleBackToList}
+                    className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary mb-6 w-fit group"
+                >
+                    <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-full group-hover:bg-primary/10 transition-colors">
+                        <span className="material-symbols-outlined !text-lg">arrow_back</span>
+                    </div>
+                    Voltar para o diretório
+                </button>
+
+                {/* Main Content */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Info */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Header Card */}
+                        <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8 shadow-sm flex flex-col sm:flex-row gap-6 items-start">
+                            <img
+                                src={selectedTool.logoUrl}
+                                alt={selectedTool.name}
+                                className="w-24 h-24 rounded-2xl shadow-md bg-white object-contain p-1"
+                            />
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h1 className="text-3xl font-black text-gray-900 dark:text-white">{selectedTool.name}</h1>
+                                    <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-lg">
+                                        <span className="material-symbols-outlined text-amber-500 !text-sm fill" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                        <span className="font-bold text-amber-700 dark:text-amber-400">{selectedTool.rating}</span>
+                                    </div>
+                                </div>
+                                <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-4">{selectedTool.fullDescription || selectedTool.description}</p>
+
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold uppercase">{selectedTool.category}</span>
+                                    {selectedTool.isPremium ?
+                                        <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold uppercase">Pago</span> :
+                                        <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold uppercase">Grátis</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Video / Media */}
+                        {safeVideoUrl ? (
+                            <div className="rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-800 bg-black aspect-video">
+                                <iframe
+                                    className="w-full h-full"
+                                    src={safeVideoUrl}
+                                    title="YouTube video player"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
+                        ) : (
+                            <div className="rounded-3xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 h-64 bg-gradient-to-br from-violet-500/10 to-blue-500/10 flex items-center justify-center">
+                                <span className="text-gray-400 font-medium">Sem vídeo demonstrativo</span>
+                            </div>
+                        )}
+
+                        {/* Features */}
+                        <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">bolt</span>
+                                Principais Funcionalidades
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {selectedTool.features && selectedTool.features.length > 0 ? selectedTool.features.map((feature, idx) => (
+                                    <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                                        <div className="mt-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full p-1">
+                                            <span className="material-symbols-outlined !text-sm font-bold block">check</span>
+                                        </div>
+                                        <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">{feature}</span>
+                                    </div>
+                                )) : <p className="text-gray-500">Nenhuma funcionalidade listada.</p>}
+                            </div>
+                        </div>
+
+                        {/* What Is Section */}
+                        {selectedTool.whatIs && (
+                            <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">info</span>
+                                    O que é {selectedTool.name}?
+                                </h3>
+                                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{selectedTool.whatIs}</p>
+                            </div>
+                        )}
+
+                        {/* How To Use Section */}
+                        {selectedTool.howToUse && (
+                            <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">play_circle</span>
+                                    Como usar {selectedTool.name}?
+                                </h3>
+                                <div className="text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">
+                                    {selectedTool.howToUse.split('\n').map((line, idx) => (
+                                        <p key={idx}>{line}</p>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Use Cases Section */}
+                        {selectedTool.useCases && selectedTool.useCases.length > 0 && (
+                            <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">lightbulb</span>
+                                    Casos de Uso
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {selectedTool.useCases.map((useCase, idx) => (
+                                        <div key={useCase.id} className="p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-violet-50 dark:from-blue-900/10 dark:to-violet-900/10 border border-blue-100 dark:border-blue-900/30">
+                                            <div className="flex items-start gap-3 mb-3">
+                                                <div className="bg-primary-500 text-white rounded-full size-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                                    {idx + 1}
+                                                </div>
+                                                {useCase.icon && (
+                                                    <span className="material-symbols-outlined text-primary-600 dark:text-primary-400">
+                                                        {useCase.icon}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h4 className="font-bold text-gray-900 dark:text-white mb-2">{useCase.title}</h4>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">{useCase.description}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* FAQ Section */}
+                        {selectedTool.faq && selectedTool.faq.length > 0 && (
+                            <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">help</span>
+                                    Perguntas Frequentes
+                                </h3>
+                                <div className="space-y-3">
+                                    {selectedTool.faq.map((item) => (
+                                        <details key={item.id} className="group bg-gray-50 dark:bg-gray-800/50 rounded-xl overflow-hidden">
+                                            <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                                <span className="font-semibold text-gray-900 dark:text-white pr-4">{item.question}</span>
+                                                <span className="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0">
+                                                    expand_more
+                                                </span>
+                                            </summary>
+                                            <div className="px-4 pb-4 pt-2 text-gray-600 dark:text-gray-400 leading-relaxed border-t border-gray-200 dark:border-gray-700">
+                                                {item.answer}
+                                            </div>
+                                        </details>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Reviews Section */}
+                        {selectedTool.reviews && selectedTool.reviews.length > 0 && (
+                            <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">rate_review</span>
+                                    Avaliações da Comunidade
+                                </h3>
+                                <div className="space-y-4">
+                                    {selectedTool.reviews.map((review) => (
+                                        <div key={review.id} className="p-5 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                                            <div className="flex items-start gap-4 mb-3">
+                                                <img
+                                                    src={review.userAvatar}
+                                                    alt={review.userName}
+                                                    className="size-12 rounded-full object-cover"
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <h4 className="font-bold text-gray-900 dark:text-white">{review.userName}</h4>
+                                                        <div className="flex items-center gap-1">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <span
+                                                                    key={i}
+                                                                    className={`material-symbols-outlined !text-sm ${i < review.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`}
+                                                                    style={i < review.rating ? { fontVariationSettings: "'FILL' 1" } : {}}
+                                                                >
+                                                                    star
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{review.createdAt}</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">"{review.comment}"</p>
+                                            <button className="text-xs text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 flex items-center gap-1">
+                                                <span className="material-symbols-outlined !text-sm">thumb_up</span>
+                                                Útil ({review.helpful})
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Pricing Section */}
+                        {selectedTool.pricing && selectedTool.pricing.length > 0 && (
+                            <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">payments</span>
+                                    Preços e Planos
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {selectedTool.pricing.map((plan) => (
+                                        <div
+                                            key={plan.id}
+                                            className={`relative p-6 rounded-2xl border-2 ${plan.isPopular
+                                                ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20'
+                                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/30'
+                                                }`}
+                                        >
+                                            {plan.isPopular && (
+                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary-500 text-white px-4 py-1 rounded-full text-xs font-bold">
+                                                    Mais Popular
+                                                </div>
+                                            )}
+                                            <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{plan.name}</h4>
+                                            <div className="mb-4">
+                                                <span className="text-3xl font-black text-gray-900 dark:text-white">{plan.price}</span>
+                                                {plan.period && <span className="text-gray-500 dark:text-gray-400">/{plan.period === 'month' ? 'mês' : plan.period}</span>}
+                                            </div>
+                                            <ul className="space-y-2 mb-6">
+                                                {plan.features.map((feature, idx) => (
+                                                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                                        <span className="material-symbols-outlined text-green-500 !text-base mt-0.5">check_circle</span>
+                                                        {feature}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            <a
+                                                href={selectedTool.websiteUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className={`block text-center py-3 rounded-xl font-bold transition-all ${plan.isPopular
+                                                    ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg'
+                                                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                                                    }`}
+                                            >
+                                                Começar
+                                            </a>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Related Tools Section */}
+                        {selectedTool.relatedToolIds && selectedTool.relatedToolIds.length > 0 && (
+                            <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">explore</span>
+                                    Ferramentas Relacionadas
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {selectedTool.relatedToolIds.map((toolId) => {
+                                        const relatedTool = tools.find(t => t.id === toolId);
+                                        if (!relatedTool) return null;
+                                        return (
+                                            <div
+                                                key={relatedTool.id}
+                                                onClick={() => setSelectedTool(relatedTool)}
+                                                className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-600 cursor-pointer transition-all hover:shadow-md group"
+                                            >
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <img
+                                                        src={relatedTool.logoUrl}
+                                                        alt={relatedTool.name}
+                                                        className="size-12 rounded-lg object-cover bg-white p-1"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+                                                            {relatedTool.name}
+                                                        </h4>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-amber-500 !text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                                            <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{relatedTool.rating}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{relatedTool.description}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column: CTA & Community */}
+                    <div className="space-y-6">
+                        {/* Visit Site CTA */}
+                        <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-lg sticky top-6">
+                            <a
+                                href={selectedTool.websiteUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-center w-full bg-primary hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] mb-4 gap-2"
+                            >
+                                Visitar Site Oficial
+                                <span className="material-symbols-outlined !text-lg">open_in_new</span>
+                            </a>
+                            <p className="text-xs text-center text-gray-400">Você será redirecionado para o site da ferramenta.</p>
+                        </div>
+
+                        {/* Community Insights (Locked for guests) */}
+                        <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-3xl p-6 text-white relative overflow-hidden">
+                            <div className="relative z-10">
+                                <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+                                    <span className="material-symbols-outlined">forum</span>
+                                    Comunidade
+                                </h3>
+
+                                {currentUser ? (
+                                    <div className="space-y-4 mt-4">
+                                        <p className="text-indigo-100 text-sm">Discussões exclusivas sobre {selectedTool.name}:</p>
+                                        <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="size-5 rounded-full bg-white/20"></div>
+                                                <span className="text-xs font-bold opacity-80">@marcos_dev</span>
+                                            </div>
+                                            <p className="text-xs opacity-90">"Essa ferramenta salvou meu projeto. A integração é perfeita."</p>
+                                        </div>
+                                        <button className="w-full bg-white text-indigo-700 font-bold py-2 rounded-lg text-sm hover:bg-indigo-50 transition-colors">
+                                            Ver Discussão Completa
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="mt-4">
+                                        <p className="text-indigo-100 text-sm mb-4">Veja o que os experts estão falando sobre esta ferramenta, prompts recomendados e casos de uso.</p>
+
+                                        {/* Blurred Mock Content */}
+                                        <div className="space-y-3 opacity-50 blur-[2px] select-none mb-4" aria-hidden="true">
+                                            <div className="bg-white/10 rounded-xl p-3 h-16"></div>
+                                            <div className="bg-white/10 rounded-xl p-3 h-16"></div>
+                                        </div>
+
+                                        <div className="absolute inset-0 top-20 bg-gradient-to-t from-indigo-900/90 to-transparent flex items-end justify-center pb-6">
+                                            <div className="text-center px-4">
+                                                <p className="font-bold text-sm mb-2">Conteúdo Exclusivo</p>
+                                                <button className="bg-white text-indigo-900 font-bold py-2 px-6 rounded-full text-sm hover:bg-indigo-50 transition-colors shadow-lg">
+                                                    Entrar na Comunidade
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            {/* Background Deco */}
+                            <div className="absolute -right-10 -bottom-10 size-40 bg-white/10 rounded-full blur-3xl"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // -- LIST VIEW --
+    return (
+        <div className="flex flex-col gap-8 animate-in fade-in duration-300">
+
+            {/* HERO HEADER */}
+            <div className="relative rounded-3xl overflow-hidden px-6 py-8 sm:px-12 sm:py-12 text-center">
+                {/* Animated Mesh Background */}
+                <div className="absolute inset-0 bg-gray-900 mesh-background"></div>
+                        )}
+            </div>
+
+            {/* Quick Stats */}
+            <div className="flex flex-wrap justify-center gap-4 text-xs sm:text-sm">
+                <div className="flex items-center gap-1.5 text-gray-300">
+                    <span className="material-symbols-outlined text-primary-400 !text-base">auto_awesome</span>
+                    <span><strong className="text-white">{tools.length}</strong> Ferramentas</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-300">
+                    <span className="material-symbols-outlined text-green-400 !text-base">verified</span>
+                    <span><strong className="text-white">{tools.filter(t => t.rating >= 4.5).length}</strong> Top</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-300">
+                    <span className="material-symbols-outlined text-amber-400 !text-base">workspace_premium</span>
+                    <span><strong className="text-white">{tools.filter(t => !t.isPremium).length}</strong> Grátis</span>
+                </div>
+            </div>
+        </div>
+            </div >
+
+    {/* CATEGORY FILTERS */ }
+    < div className = "flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0" >
+    {
+        categories.map(cat => (
+            <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap transition-all border-2 ${selectedCategory === cat
+                    ? 'bg-primary-500 border-primary-500 text-white shadow-glow'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary-300'
+                    }`}
+            >
+                {cat}
+                {cat !== 'Todas' && (
+                    <span className="ml-2 text-xs opacity-70">
+                        ({tools.filter(t => t.category === cat).length})
+                    </span>
+                )}
+            </button>
+        ))
+    }
+            </div >
+
+{
+    loading?(
+                <div className = "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" >
+        {
+            [1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="h-72 bg-gray-100 dark:bg-gray-800 rounded-3xl skeleton"></div>
+            ))
+        }
+                </div>
+            ) : (
+    <div className="flex flex-col gap-8">
+
+        {/* FEATURED SECTION (Only show if no search/filter active) */}
+        {!searchQuery && selectedCategory === 'Todas' && featuredTool && (
+            <div>
+                <div className="flex items-center gap-3 mb-4">
+                    <span className="material-symbols-outlined text-amber-500 text-2xl">verified</span>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Destaque da Semana</h2>
+                </div>
+                <ToolCard tool={featuredTool} onClick={setSelectedTool} featured={true} />
+            </div>
+        )}
+
+        {/* GRID */}
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {searchQuery || selectedCategory !== 'Todas'
+                        ? `Resultados (${filteredTools.length})`
+                        : 'Todas as Ferramentas'}
+                </h2>
+
+                {/* Sort Options */}
+                {!loading && filteredTools.length > 0 && (
+                    <select
+                        className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary-500"
+                        onChange={(e) => {
+                            const sorted = [...filteredTools];
+                            if (e.target.value === 'rating') sorted.sort((a, b) => b.rating - a.rating);
+                            if (e.target.value === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
+                            setTools(sorted);
+                        }}
+                    >
+                        <option value="">Ordenar por</option>
+                        <option value="rating">⭐ Melhor Avaliação</option>
+                        <option value="name">🔤 Nome A-Z</option>
+                    </select>
+                )}
+            </div>
+
+            {filteredTools.length === 0 ? (
+                <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4 block">search_off</span>
+                    <p className="text-gray-500 text-lg font-medium">Nenhuma ferramenta encontrada.</p>
+                    <p className="text-gray-400 text-sm mt-2">Tente ajustar os filtros ou buscar por outro termo</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {(searchQuery || selectedCategory !== 'Todas' ? filteredTools : listTools).map(tool => (
+                        <ToolCard key={tool.id} tool={tool} onClick={setSelectedTool} />
+                    ))}
+                </div>
+            )}
+        </div>
+    </div>
+)}
+        </div >
+    );
+};
+
+export default ToolsView;
