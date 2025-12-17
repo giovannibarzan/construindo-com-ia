@@ -47,7 +47,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onClick, featured = false }) 
         'relative p-6 h-full flex',
         featured ? 'flex-col md:flex-row gap-6 items-start md:items-center' : 'flex-col'
       )}>
-        
+
         {/* Header: Logo & Info */}
         <div className={clsx(
           'flex items-start gap-4 w-full',
@@ -59,14 +59,14 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onClick, featured = false }) 
               'absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300',
               'bg-primary-400'
             )} />
-            <img 
-              src={tool.logoUrl} 
-              alt={tool.name} 
+            <img
+              src={tool.logoUrl}
+              alt={tool.name}
               loading="lazy"
               className={clsx(
                 'relative rounded-2xl object-cover border border-gray-100 dark:border-gray-700 shadow-md bg-white',
                 featured ? 'size-24' : 'size-16'
-              )} 
+              )}
             />
           </div>
 
@@ -79,7 +79,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onClick, featured = false }) 
               )}>
                 {tool.name}
               </h3>
-              
+
               {/* Trending Badge */}
               {tool.rating >= 4.8 && (
                 <span className="px-2 py-0.5 bg-gradient-premium text-white text-[10px] font-bold uppercase rounded-full shimmer">
@@ -97,7 +97,9 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onClick, featured = false }) 
           {/* Rating (Desktop) */}
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
             <FaStar className="text-amber-500 text-sm" />
-            <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{tool.rating}</span>
+            <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
+              {tool.rating > 0 ? tool.rating.toFixed(1) : 'N/A'}
+            </span>
           </div>
         </div>
 
@@ -112,13 +114,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onClick, featured = false }) 
           )}>
             {tool.description}
           </p>
-          
+
           {/* Features Pills (Featured Only) */}
           {featured && tool.features && tool.features.length > 0 && (
             <div className="flex gap-2 mt-4 flex-wrap">
               {tool.features.slice(0, 3).map((feature, idx) => (
-                <span 
-                  key={idx} 
+                <span
+                  key={idx}
                   className="text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800/50"
                 >
                   {feature}
@@ -136,14 +138,16 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onClick, featured = false }) 
           {/* Mobile Rating */}
           <div className="flex sm:hidden items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
             <FaStar className="text-amber-500 text-sm" />
-            <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{tool.rating}</span>
+            <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
+              {tool.rating > 0 ? tool.rating.toFixed(1) : 'N/A'}
+            </span>
           </div>
 
           {/* Price Badge */}
           <div className={clsx(
             'text-xs font-bold px-3 py-1.5 rounded-lg',
-            tool.isPremium 
-              ? 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30' 
+            tool.isPremium
+              ? 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30'
               : 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30'
           )}>
             {tool.isPremium ? '💎 Pago' : '✨ Grátis'}

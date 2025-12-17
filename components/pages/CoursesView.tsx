@@ -281,30 +281,37 @@ const CoursesView: React.FC<CoursesViewProps> = ({ currentUser }) => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {categories.map(cat => (
-                                <div
+                                <button
                                     key={cat.id}
                                     onClick={() => handleCategorySelect(cat)}
-                                    className="group relative h-72 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-primary-400"
+                                    className="group bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 text-left"
                                 >
-                                    <div className="absolute inset-0 bg-gray-900"></div>
-                                    <img src={cat.thumbnailUrl} className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-50 group-hover:scale-110 transition-all duration-700" alt={cat.title} />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-
-                                    <div className="absolute bottom-0 left-0 p-6 w-full">
-                                        <div className="flex gap-2 mb-3 flex-wrap">
-                                            {cat.isPremium && <span className="px-3 py-1 bg-gradient-premium text-white text-[10px] font-bold uppercase rounded-full shadow-lg">Premium</span>}
-                                            {cat.tags.slice(0, 2).map(t => <span key={t} className="px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-full backdrop-blur-sm">{t}</span>)}
-                                        </div>
-                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary-300 transition-colors">{cat.title}</h3>
-                                        <p className="text-gray-200 text-sm line-clamp-2 mb-4">{cat.description}</p>
-
-                                        <div className="flex items-center text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 duration-300">
-                                            Ver Cursos <span className="material-symbols-outlined !text-lg ml-2">arrow_forward</span>
-                                        </div>
+                                    {/* Logo Section */}
+                                    <div className="p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 flex items-center justify-center border-b border-gray-100 dark:border-gray-800">
+                                        <img
+                                            src={cat.thumbnailUrl}
+                                            alt={cat.title}
+                                            className="w-24 h-24 object-contain"
+                                        />
                                     </div>
 
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-primary-500/20 to-transparent pointer-events-none"></div>
-                                </div>
+                                    {/* Content Section */}
+                                    <div className="p-6">
+                                        {/* Tags */}
+                                        {cat.isPremium && (
+                                            <span className="inline-block px-3 py-1 bg-gradient-premium text-white text-xs font-bold uppercase rounded-full mb-3">
+                                                Premium
+                                            </span>
+                                        )}
+
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
+                                            {cat.title}
+                                        </h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                            {cat.description}
+                                        </p>
+                                    </div>
+                                </button>
                             ))}
                         </div>
                     )}

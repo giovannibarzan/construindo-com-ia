@@ -28,12 +28,29 @@ const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
     // FAQ accordion state
     const [openFaqId, setOpenFaqId] = useState<string | null>(null);
 
-    // Load tools
+    // Load tools and calculate real ratings
     useEffect(() => {
-        backend.getTools().then(data => {
-            setTools(data);
-            setLoading(false);
-        });
+        const loadToolsWithRatings = async () => {
+            try {
+                const toolsData = await backend.getTools();
+
+                // Calculate real rating for each tool
+                const toolsWithRatings = await Promise.all(
+                    toolsData.map(async (tool) => {
+                        const rating = await backend.calculateToolRating(tool.id);
+                        return { ...tool, rating: rating || 0 };
+                    })
+                );
+
+                setTools(toolsWithRatings);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error loading tools:', error);
+                setLoading(false);
+            }
+        };
+
+        loadToolsWithRatings();
     }, []);
 
     // Load reviews when tool is selected
@@ -500,8 +517,8 @@ const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
                                                 >
                                                     <span
                                                         className={`material-symbols-outlined text-3xl ${star <= newReview.rating
-                                                                ? 'text-amber-500 fill'
-                                                                : 'text-gray-300 dark:text-gray-600'
+                                                            ? 'text-amber-500 fill'
+                                                            : 'text-gray-300 dark:text-gray-600'
                                                             }`}
                                                     >
                                                         star
@@ -580,8 +597,8 @@ const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
                                                             <button
                                                                 onClick={() => handleVoteHelpful(review.id)}
                                                                 className={`flex items-center gap-1 text-xs transition-colors ${userVotes.includes(review.id)
-                                                                        ? 'text-primary font-bold'
-                                                                        : 'text-gray-500 hover:text-primary'
+                                                                    ? 'text-primary font-bold'
+                                                                    : 'text-gray-500 hover:text-primary'
                                                                     }`}
                                                             >
                                                                 <span className="material-symbols-outlined !text-sm">thumb_up</span>
