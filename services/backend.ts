@@ -1076,5 +1076,239 @@ export const backend = {
             .eq('id', suggestionId);
 
         if (error) throw new Error(error.message);
+    },
+
+    // Send contact message
+    sendContactMessage: async (data: { name: string; email: string; subject: string; message: string }) => {
+        const { error } = await supabase
+            .from('contact_messages')
+            .insert([{
+                name: data.name,
+                email: data.email,
+                subject: data.subject,
+                message: data.message,
+                status: 'unread'
+            }]);
+
+        if (error) throw new Error(error.message);
+    },
+
+    // ========== COURSE PROGRESS ==========
+
+    // Mark lesson as complete
+    markLessonComplete: async (userId: string, courseId: string, lessonId: string) => {
+        const { error } = await supabase
+            .from('course_progress')
+            .upsert({
+                user_id: userId,
+                course_id: courseId,
+                lesson_id: lessonId,
+                completed: true,
+                completed_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id,lesson_id'
+            });
+
+        if (error) throw new Error(error.message);
+    },
+
+    // Get course progress
+    getCourseProgress: async (userId: string, courseId: string) => {
+        // Get all lessons for this course
+        const { data: modules } = await supabase
+            .from('course_modules')
+            .select('id')
+            .eq('course_id', courseId);
+
+        if (!modules) return { completed: 0, total: 0, percentage: 0 };
+
+        const moduleIds = modules.map(m => m.id);
+
+        const { data: allLessons } = await supabase
+            .from('course_lessons')
+            .select('id')
+            .in('module_id', moduleIds);
+
+        const total = allLessons?.length || 0;
+
+        // Get completed lessons
+        const { data: completedLessons } = await supabase
+            .from('course_progress')
+            .select('lesson_id')
+            .eq('user_id', userId)
+            .eq('course_id', courseId)
+            .eq('completed', true);
+
+        const completed = completedLessons?.length || 0;
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        return { completed, total, percentage };
+    },
+
+    // Get completed lesson IDs
+    getCompletedLessons: async (userId: string, courseId: string) => {
+        const { data, error } = await supabase
+            .from('course_progress')
+            .select('lesson_id')
+            .eq('user_id', userId)
+            .eq('course_id', courseId)
+            .eq('completed', true);
+
+        if (error) throw new Error(error.message);
+        return data?.map(d => d.lesson_id) || [];
+    },
+
+    // ========== COURSE REVIEWS ==========
+
+    // Submit course review
+    submitCourseReview: async (userId: string, courseId: string, rating: number, comment?: string) => {
+        const { error } = await supabase
+            .from('course_reviews')
+            .upsert({
+                user_id: userId,
+                course_id: courseId,
+                rating,
+                comment: comment || null
+            }, {
+                onConflict: 'user_id,course_id'
+            });
+
+        if (error) throw new Error(error.message);
+    },
+
+    // Get course reviews
+    getCourseReviews: async (courseId: string) => {
+        const { data, error } = await supabase
+            .from('course_reviews')
+            .select(`
+                *,
+                profiles:user_id (
+                    name,
+                    avatar_url
+                )
+            `)
+            .eq('course_id', courseId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw new Error(error.message);
+        return data || [];
+    },
+
+    // Get user's review for a course
+    getUserCourseReview: async (userId: string, courseId: string) => {
+        const { data, error } = await supabase
+            .from('course_reviews')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('course_id', courseId)
+            .single();
+
+        if (error && error.code !== 'PGRST116') throw new Error(error.message);
+        return data;
+    },
+
+    // ========== TOOL REVIEWS ==========
+
+    // Submit tool review
+    submitToolReview: async (toolId: string, userId: string, rating: number, comment: string) => {
+        const { error } = await supabase
+            .from('tool_reviews')
+            .upsert({
+                tool_id: toolId,
+                user_id: userId,
+                rating,
+                comment,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id,tool_id'
+            });
+
+        if (error) throw new Error(error.message);
+    },
+
+    // Get tool reviews
+    getToolReviews: async (toolId: string) => {
+        const { data, error } = await supabase
+            .from('tool_reviews')
+            .select(`
+                *,
+                profiles:user_id (
+                    name,
+                    avatar_url,
+                    handle
+                )
+            `)
+            .eq('tool_id', toolId)
+            .order('helpful_count', { ascending: false })
+            .order('created_at', { ascending: false });
+
+        if (error) throw new Error(error.message);
+        return data || [];
+    },
+
+    // Vote review as helpful
+    voteReviewHelpful: async (reviewId: string, userId: string) => {
+        // Check if already voted
+        const { data: existingVote } = await supabase
+            .from('tool_review_votes')
+            .select('id')
+            .eq('review_id', reviewId)
+            .eq('user_id', userId)
+            .single();
+
+        if (existingVote) {
+            // Remove vote
+            const { error } = await supabase
+                .from('tool_review_votes')
+                .delete()
+                .eq('review_id', reviewId)
+                .eq('user_id', userId);
+
+            if (error) throw new Error(error.message);
+            return false; // Vote removed
+        } else {
+            // Add vote
+            const { error } = await supabase
+                .from('tool_review_votes')
+                .insert({
+                    review_id: reviewId,
+                    user_id: userId
+                });
+
+            if (error) throw new Error(error.message);
+            return true; // Vote added
+        }
+    },
+
+    // Get user's vote status for reviews
+    getUserReviewVotes: async (userId: string, reviewIds: string[]) => {
+        const { data, error } = await supabase
+            .from('tool_review_votes')
+            .select('review_id')
+            .eq('user_id', userId)
+            .in('review_id', reviewIds);
+
+        if (error) throw new Error(error.message);
+        return data?.map(v => v.review_id) || [];
+    },
+
+    // Calculate tool rating
+    calculateToolRating: async (toolId: string) => {
+        const { data, error } = await supabase
+            .rpc('calculate_tool_rating', { tool_uuid: toolId });
+
+        if (error) throw new Error(error.message);
+        return data || 0;
+    },
+
+    // Delete tool review
+    deleteToolReview: async (reviewId: string, userId: string) => {
+        const { error } = await supabase
+            .from('tool_reviews')
+            .delete()
+            .eq('id', reviewId)
+            .eq('user_id', userId);
+
+        if (error) throw new Error(error.message);
     }
 };

@@ -483,9 +483,12 @@ const AdminView: React.FC<AdminViewProps> = ({ onNavigateToSite }) => {
         );
 
         // Image Upload Component
-        const imageUpload = (lbl: string, val: string, key: string, folder: string) => (
+        const imageUpload = (lbl: string, val: string, key: string, folder: string, dimensions?: string) => (
             <div className="col-span-2">
-                <label className="block text-sm font-bold mb-1">{lbl}</label>
+                <label className="block text-sm font-bold mb-1">
+                    {lbl}
+                    {dimensions && <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 font-normal">({dimensions})</span>}
+                </label>
                 <div className="flex gap-3 items-start">
                     {/* Preview */}
                     <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-800 flex-shrink-0">
@@ -549,10 +552,10 @@ const AdminView: React.FC<AdminViewProps> = ({ onNavigateToSite }) => {
             </div>
         );
 
-        if (type === 'CATEGORY') return <>{commonInput('Título', formData.title, 'title')}{commonText('Descrição', formData.description, 'description')}{imageUpload('Thumbnail', formData.thumbnailUrl, 'thumbnailUrl', 'categories')}{commonInput('Tags (CSV)', Array.isArray(formData.tags) ? formData.tags.join(',') : formData.tags, 'tags', false)}<div className="col-span-2"><label className="flex gap-2"><input type="checkbox" checked={formData.isPremium} onChange={e => setFormData({ ...formData, isPremium: e.target.checked })} /> Premium</label></div></>;
-        if (type === 'COURSE') return <>{commonInput('Título', formData.title, 'title')}{commonText('Descrição', formData.description, 'description')}{imageUpload('Thumbnail', formData.thumbnailUrl, 'thumbnailUrl', 'courses')}{commonInput('Autor', formData.authorName, 'authorName')}{commonInput('Duração', formData.duration, 'duration')}{commonInput('Nível', formData.level, 'level')}</>;
-        if (type === 'MODULE') return <>{commonInput('Título', formData.title, 'title')}{commonText('Descrição', formData.description, 'description')}</>;
-        if (type === 'LESSON') return <>{commonInput('Título', formData.title, 'title')}{commonInput('Video URL', formData.videoUrl, 'videoUrl')}{commonInput('Duração', formData.duration, 'duration')}{commonText('Conteúdo', formData.content, 'content')}</>;
+        if (type === 'CATEGORY') return <>{commonInput('Título', formData.title, 'title')}{commonText('Descrição', formData.description, 'description')}{imageUpload('Thumbnail', formData.thumbnailUrl, 'thumbnailUrl', 'categories', '800x450px - 16:9')}{commonInput('Tags (CSV)', Array.isArray(formData.tags) ? formData.tags.join(',') : formData.tags, 'tags', false)}<div className="col-span-2"><label className="flex gap-2"><input type="checkbox" checked={formData.isPremium} onChange={e => setFormData({ ...formData, isPremium: e.target.checked })} /> Premium</label></div></>;
+        if (type === 'COURSE') return <>{commonInput('Título', formData.title, 'title')}{commonText('Descrição', formData.description, 'description')}{imageUpload('Thumbnail', formData.thumbnailUrl, 'thumbnailUrl', 'courses', '800x450px - 16:9')}{commonInput('Autor', formData.authorName, 'authorName')}{commonInput('Duração', formData.duration, 'duration')}{commonInput('Nível', formData.level, 'level')}<div className="col-span-2"><label className="flex gap-2"><input type="checkbox" checked={formData.isPremium} onChange={e => setFormData({ ...formData, isPremium: e.target.checked })} /> <span className="font-bold">Premium</span></label></div></>;
+        if (type === 'MODULE') return <>{commonInput('Título', formData.title, 'title')}{commonText('Descrição', formData.description, 'description')}<div className="col-span-2"><label className="flex gap-2"><input type="checkbox" checked={formData.isPremium} onChange={e => setFormData({ ...formData, isPremium: e.target.checked })} /> <span className="font-bold">Premium</span></label></div></>;
+        if (type === 'LESSON') return <>{commonInput('Título', formData.title, 'title')}{commonInput('Video URL', formData.videoUrl, 'videoUrl')}{commonInput('Duração', formData.duration, 'duration')}{commonText('Conteúdo', formData.content, 'content')}<div className="col-span-2"><label className="flex gap-2"><input type="checkbox" checked={formData.isPremium} onChange={e => setFormData({ ...formData, isPremium: e.target.checked })} /> <span className="font-bold">Premium</span></label></div></>;
 
         // USER FORM
         if (type === 'USER') return (
@@ -563,8 +566,8 @@ const AdminView: React.FC<AdminViewProps> = ({ onNavigateToSite }) => {
                 {!editingItem && <div className="col-span-2"><label className="block text-sm font-bold mb-1">Senha</label><input required type="password" className="w-full rounded-lg border-gray-300 dark:bg-gray-700 px-3 py-2" value={formData.password || ''} onChange={e => setFormData({ ...formData, password: e.target.value })} /></div>}
                 {commonInput('Handle (@username)', formData.handle, 'handle', false)}
                 {commonText('Bio', formData.bio, 'bio')}
-                {imageUpload('Avatar', formData.avatarUrl, 'avatarUrl', 'users')}
-                {imageUpload('Capa', formData.coverUrl, 'coverUrl', 'users')}
+                {imageUpload('Avatar', formData.avatarUrl, 'avatarUrl', 'users', '400x400px - 1:1')}
+                {imageUpload('Capa', formData.coverUrl, 'coverUrl', 'users', '1200x300px - 4:1')}
                 <div className="col-span-2">
                     <label className="block text-sm font-bold mb-1">Plano</label>
                     <select
@@ -598,7 +601,7 @@ const AdminView: React.FC<AdminViewProps> = ({ onNavigateToSite }) => {
                 {commonInput('Nome', formData.name, 'name')}
                 {commonText('Descrição Curta', formData.description, 'description')}
                 {commonText('Descrição Completa', formData.fullDescription, 'fullDescription')}
-                {imageUpload('Logo', formData.logoUrl, 'logoUrl', 'tools')}
+                {imageUpload('Logo', formData.logoUrl, 'logoUrl', 'tools', '200x200px - 1:1')}
                 {commonInput('Categoria', formData.category, 'category')}
                 <div className="col-span-2">
                     <label className="block text-sm font-bold mb-1">Avaliação (0-5)</label>
@@ -665,52 +668,310 @@ const AdminView: React.FC<AdminViewProps> = ({ onNavigateToSite }) => {
                 </div>
 
                 <div className="col-span-2 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800 mt-4">
-                    <h4 className="font-bold text-amber-900 dark:text-amber-100 mb-1">📊 Dados JSON (Avançado)</h4>
-                    <p className="text-xs text-amber-700 dark:text-amber-300">Cole JSON válido ou deixe vazio</p>
+                    <h4 className="font-bold text-amber-900 dark:text-amber-100 mb-1">💡 Casos de Uso</h4>
                 </div>
 
-                <div className="col-span-2">
-                    <label className="block text-sm font-bold mb-1">Casos de Uso (JSON)</label>
-                    <textarea
-                        className="w-full rounded-lg border-gray-300 dark:bg-gray-700 px-3 py-2 font-mono text-xs"
-                        rows={6}
-                        value={typeof formData.useCases === 'string' ? formData.useCases : JSON.stringify(formData.useCases || [], null, 2)}
-                        onChange={e => setFormData({ ...formData, useCases: e.target.value })}
-                        placeholder='[{"id":"uc1","title":"Título","description":"Descrição","icon":"rocket_launch"}]'
-                    />
+                <div className="col-span-2 space-y-3">
+                    {(Array.isArray(formData.useCases) ? formData.useCases : []).map((useCase: any, index: number) => (
+                        <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-start mb-3">
+                                <h5 className="font-bold text-sm">Caso de Uso #{index + 1}</h5>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newUseCases = [...(Array.isArray(formData.useCases) ? formData.useCases : [])];
+                                        newUseCases.splice(index, 1);
+                                        setFormData({ ...formData, useCases: newUseCases });
+                                    }}
+                                    className="text-red-500 hover:text-red-700 text-sm"
+                                >
+                                    Remover
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    placeholder="Título"
+                                    className="col-span-2 rounded-lg border px-3 py-2 text-sm"
+                                    value={useCase.title || ''}
+                                    onChange={e => {
+                                        const newUseCases = [...(Array.isArray(formData.useCases) ? formData.useCases : [])];
+                                        newUseCases[index] = { ...useCase, title: e.target.value };
+                                        setFormData({ ...formData, useCases: newUseCases });
+                                    }}
+                                />
+                                <textarea
+                                    placeholder="Descrição"
+                                    className="col-span-2 rounded-lg border px-3 py-2 text-sm"
+                                    rows={2}
+                                    value={useCase.description || ''}
+                                    onChange={e => {
+                                        const newUseCases = [...(Array.isArray(formData.useCases) ? formData.useCases : [])];
+                                        newUseCases[index] = { ...useCase, description: e.target.value };
+                                        setFormData({ ...formData, useCases: newUseCases });
+                                    }}
+                                />
+                                <input
+                                    placeholder="Ícone (ex: rocket_launch)"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={useCase.icon || ''}
+                                    onChange={e => {
+                                        const newUseCases = [...(Array.isArray(formData.useCases) ? formData.useCases : [])];
+                                        newUseCases[index] = { ...useCase, icon: e.target.value };
+                                        setFormData({ ...formData, useCases: newUseCases });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const newUseCases = [...(Array.isArray(formData.useCases) ? formData.useCases : []), { id: `uc${Date.now()}`, title: '', description: '', icon: '' }];
+                            setFormData({ ...formData, useCases: newUseCases });
+                        }}
+                        className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors"
+                    >
+                        + Adicionar Caso de Uso
+                    </button>
                 </div>
 
-                <div className="col-span-2">
-                    <label className="block text-sm font-bold mb-1">FAQ (JSON)</label>
-                    <textarea
-                        className="w-full rounded-lg border-gray-300 dark:bg-gray-700 px-3 py-2 font-mono text-xs"
-                        rows={6}
-                        value={typeof formData.faq === 'string' ? formData.faq : JSON.stringify(formData.faq || [], null, 2)}
-                        onChange={e => setFormData({ ...formData, faq: e.target.value })}
-                        placeholder='[{"id":"faq1","question":"Pergunta?","answer":"Resposta"}]'
-                    />
+                <div className="col-span-2 bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800 mt-4">
+                    <h4 className="font-bold text-purple-900 dark:text-purple-100 mb-1">❓ FAQ</h4>
                 </div>
 
-                <div className="col-span-2">
-                    <label className="block text-sm font-bold mb-1">Reviews (JSON)</label>
-                    <textarea
-                        className="w-full rounded-lg border-gray-300 dark:bg-gray-700 px-3 py-2 font-mono text-xs"
-                        rows={6}
-                        value={typeof formData.reviews === 'string' ? formData.reviews : JSON.stringify(formData.reviews || [], null, 2)}
-                        onChange={e => setFormData({ ...formData, reviews: e.target.value })}
-                        placeholder='[{"id":"r1","userId":"u1","userName":"Nome","userAvatar":"url","rating":5,"comment":"Comentário","createdAt":"01/01/2024","helpful":10}]'
-                    />
+                <div className="col-span-2 space-y-3">
+                    {(Array.isArray(formData.faq) ? formData.faq : []).map((faqItem: any, index: number) => (
+                        <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-start mb-3">
+                                <h5 className="font-bold text-sm">FAQ #{index + 1}</h5>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newFaq = [...(Array.isArray(formData.faq) ? formData.faq : [])];
+                                        newFaq.splice(index, 1);
+                                        setFormData({ ...formData, faq: newFaq });
+                                    }}
+                                    className="text-red-500 hover:text-red-700 text-sm"
+                                >
+                                    Remover
+                                </button>
+                            </div>
+                            <div className="space-y-2">
+                                <input
+                                    placeholder="Pergunta"
+                                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                                    value={faqItem.question || ''}
+                                    onChange={e => {
+                                        const newFaq = [...(Array.isArray(formData.faq) ? formData.faq : [])];
+                                        newFaq[index] = { ...faqItem, question: e.target.value };
+                                        setFormData({ ...formData, faq: newFaq });
+                                    }}
+                                />
+                                <textarea
+                                    placeholder="Resposta"
+                                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                                    rows={3}
+                                    value={faqItem.answer || ''}
+                                    onChange={e => {
+                                        const newFaq = [...(Array.isArray(formData.faq) ? formData.faq : [])];
+                                        newFaq[index] = { ...faqItem, answer: e.target.value };
+                                        setFormData({ ...formData, faq: newFaq });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const newFaq = [...(Array.isArray(formData.faq) ? formData.faq : []), { id: `faq${Date.now()}`, question: '', answer: '' }];
+                            setFormData({ ...formData, faq: newFaq });
+                        }}
+                        className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors"
+                    >
+                        + Adicionar FAQ
+                    </button>
                 </div>
 
-                <div className="col-span-2">
-                    <label className="block text-sm font-bold mb-1">Pricing (JSON)</label>
-                    <textarea
-                        className="w-full rounded-lg border-gray-300 dark:bg-gray-700 px-3 py-2 font-mono text-xs"
-                        rows={6}
-                        value={typeof formData.pricing === 'string' ? formData.pricing : JSON.stringify(formData.pricing || [], null, 2)}
-                        onChange={e => setFormData({ ...formData, pricing: e.target.value })}
-                        placeholder='[{"id":"free","name":"Free","price":"R$ 0","period":"month","features":["Feature 1"],"isPopular":false}]'
-                    />
+                <div className="col-span-2 bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800 mt-4">
+                    <h4 className="font-bold text-green-900 dark:text-green-100 mb-1">⭐ Reviews</h4>
+                </div>
+
+                <div className="col-span-2 space-y-3">
+                    {(Array.isArray(formData.reviews) ? formData.reviews : []).map((review: any, index: number) => (
+                        <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-start mb-3">
+                                <h5 className="font-bold text-sm">Review #{index + 1}</h5>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newReviews = [...(Array.isArray(formData.reviews) ? formData.reviews : [])];
+                                        newReviews.splice(index, 1);
+                                        setFormData({ ...formData, reviews: newReviews });
+                                    }}
+                                    className="text-red-500 hover:text-red-700 text-sm"
+                                >
+                                    Remover
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    placeholder="Nome do Usuário"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={review.userName || ''}
+                                    onChange={e => {
+                                        const newReviews = [...(Array.isArray(formData.reviews) ? formData.reviews : [])];
+                                        newReviews[index] = { ...review, userName: e.target.value };
+                                        setFormData({ ...formData, reviews: newReviews });
+                                    }}
+                                />
+                                <input
+                                    placeholder="Avatar URL"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={review.userAvatar || ''}
+                                    onChange={e => {
+                                        const newReviews = [...(Array.isArray(formData.reviews) ? formData.reviews : [])];
+                                        newReviews[index] = { ...review, userAvatar: e.target.value };
+                                        setFormData({ ...formData, reviews: newReviews });
+                                    }}
+                                />
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="5"
+                                    placeholder="Rating (1-5)"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={review.rating || ''}
+                                    onChange={e => {
+                                        const newReviews = [...(Array.isArray(formData.reviews) ? formData.reviews : [])];
+                                        newReviews[index] = { ...review, rating: parseInt(e.target.value) };
+                                        setFormData({ ...formData, reviews: newReviews });
+                                    }}
+                                />
+                                <input
+                                    placeholder="Data (ex: 15/11/2024)"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={review.createdAt || ''}
+                                    onChange={e => {
+                                        const newReviews = [...(Array.isArray(formData.reviews) ? formData.reviews : [])];
+                                        newReviews[index] = { ...review, createdAt: e.target.value };
+                                        setFormData({ ...formData, reviews: newReviews });
+                                    }}
+                                />
+                                <textarea
+                                    placeholder="Comentário"
+                                    className="col-span-2 rounded-lg border px-3 py-2 text-sm"
+                                    rows={2}
+                                    value={review.comment || ''}
+                                    onChange={e => {
+                                        const newReviews = [...(Array.isArray(formData.reviews) ? formData.reviews : [])];
+                                        newReviews[index] = { ...review, comment: e.target.value };
+                                        setFormData({ ...formData, reviews: newReviews });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const newReviews = [...(Array.isArray(formData.reviews) ? formData.reviews : []), { id: `r${Date.now()}`, userName: '', userAvatar: '', rating: 5, comment: '', createdAt: '', helpful: 0 }];
+                            setFormData({ ...formData, reviews: newReviews });
+                        }}
+                        className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors"
+                    >
+                        + Adicionar Review
+                    </button>
+                </div>
+
+                <div className="col-span-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 mt-4">
+                    <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-1">💰 Planos de Preço</h4>
+                </div>
+
+                <div className="col-span-2 space-y-3">
+                    {(Array.isArray(formData.pricing) ? formData.pricing : []).map((plan: any, index: number) => (
+                        <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-start mb-3">
+                                <h5 className="font-bold text-sm">Plano #{index + 1}</h5>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newPricing = [...(Array.isArray(formData.pricing) ? formData.pricing : [])];
+                                        newPricing.splice(index, 1);
+                                        setFormData({ ...formData, pricing: newPricing });
+                                    }}
+                                    className="text-red-500 hover:text-red-700 text-sm"
+                                >
+                                    Remover
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    placeholder="Nome do Plano"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={plan.name || ''}
+                                    onChange={e => {
+                                        const newPricing = [...(Array.isArray(formData.pricing) ? formData.pricing : [])];
+                                        newPricing[index] = { ...plan, name: e.target.value };
+                                        setFormData({ ...formData, pricing: newPricing });
+                                    }}
+                                />
+                                <input
+                                    placeholder="Preço (ex: R$ 99)"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={plan.price || ''}
+                                    onChange={e => {
+                                        const newPricing = [...(Array.isArray(formData.pricing) ? formData.pricing : [])];
+                                        newPricing[index] = { ...plan, price: e.target.value };
+                                        setFormData({ ...formData, pricing: newPricing });
+                                    }}
+                                />
+                                <input
+                                    placeholder="Período (ex: month)"
+                                    className="rounded-lg border px-3 py-2 text-sm"
+                                    value={plan.period || ''}
+                                    onChange={e => {
+                                        const newPricing = [...(Array.isArray(formData.pricing) ? formData.pricing : [])];
+                                        newPricing[index] = { ...plan, period: e.target.value };
+                                        setFormData({ ...formData, pricing: newPricing });
+                                    }}
+                                />
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={plan.isPopular || false}
+                                        onChange={e => {
+                                            const newPricing = [...(Array.isArray(formData.pricing) ? formData.pricing : [])];
+                                            newPricing[index] = { ...plan, isPopular: e.target.checked };
+                                            setFormData({ ...formData, pricing: newPricing });
+                                        }}
+                                    />
+                                    <span className="text-sm">Popular</span>
+                                </label>
+                                <textarea
+                                    placeholder="Features (uma por linha)"
+                                    className="col-span-2 rounded-lg border px-3 py-2 text-sm"
+                                    rows={3}
+                                    value={Array.isArray(plan.features) ? plan.features.join('\n') : ''}
+                                    onChange={e => {
+                                        const newPricing = [...(Array.isArray(formData.pricing) ? formData.pricing : [])];
+                                        newPricing[index] = { ...plan, features: e.target.value.split('\n').filter(f => f.trim()) };
+                                        setFormData({ ...formData, pricing: newPricing });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const newPricing = [...(Array.isArray(formData.pricing) ? formData.pricing : []), { id: `p${Date.now()}`, name: '', price: '', period: 'month', features: [], isPopular: false }];
+                            setFormData({ ...formData, pricing: newPricing });
+                        }}
+                        className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors"
+                    >
+                        + Adicionar Plano
+                    </button>
                 </div>
             </>
         );
@@ -760,7 +1021,7 @@ const AdminView: React.FC<AdminViewProps> = ({ onNavigateToSite }) => {
             <>
                 {commonInput('Título', formData.title, 'title')}
                 {commonText('Descrição', formData.description, 'description')}
-                {imageUpload('Imagem', formData.imageUrl, 'imageUrl', 'giveaways')}
+                {imageUpload('Imagem', formData.imageUrl, 'imageUrl', 'giveaways', '800x600px - 4:3')}
                 <div className="col-span-2">
                     <label className="block text-sm font-bold mb-1">Data de Término</label>
                     <input

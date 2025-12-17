@@ -1,7 +1,11 @@
 
+
 import React, { useEffect, useState } from 'react';
 import { backend } from '../services/backend';
 import { useNavigate } from 'react-router-dom';
+import ContactModal, { ContactFormData } from './ContactModal';
+import TermsModal from './TermsModal';
+import PrivacyModal from './PrivacyModal';
 
 // Prop onNavigate removida, pois agora usamos o hook
 interface LandingPageProps {
@@ -11,6 +15,9 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = () => {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +34,10 @@ const LandingPage: React.FC<LandingPageProps> = () => {
   const handleAction = () => {
     // Se estiver fechado, a navegação vai para o login, mas o LoginView saberá lidar com a lista de espera
     navigate('/login');
+  };
+
+  const handleContactSubmit = async (data: ContactFormData) => {
+    await backend.sendContactMessage(data);
   };
 
   if (loading) return <div className="min-h-screen bg-white dark:bg-gray-900"></div>;
@@ -136,26 +147,195 @@ const LandingPage: React.FC<LandingPageProps> = () => {
             </div>
           </section>
 
-          {/* Features */}
+          {/* Features - Modernized */}
           <section className="mb-16 sm:mb-24 scroll-animate" id="funcionalidades">
-            <h2 className="text-center text-3xl font-bold tracking-tighter mb-4">O que os 150 fundadores terão acesso?</h2>
-            <p className="text-center text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-12">Nossa plataforma oferece as ferramentas definitivas para quem quer liderar a revolução da IA.</p>
+            <div className="text-center mb-4">
+              <div className="inline-block px-4 py-1.5 mb-4 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                ✨ Benefícios Exclusivos
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
+                O que os 150 fundadores terão acesso?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Nossa plataforma oferece as ferramentas definitivas para quem quer liderar a revolução da IA.
+              </p>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="flex flex-col gap-4 rounded-2xl p-8 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:shadow-lg transition-all">
-                <span className="material-symbols-outlined text-primary text-4xl">forum</span>
-                <h3 className="text-xl font-bold">Network de Alto Nível</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Não é apenas um feed. É um espaço para conectar com quem está construindo soluções reais usando LLMs, Agentes e Vibe Coding.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Network Card */}
+              <div className="group relative overflow-hidden rounded-2xl p-8 bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:scale-105 transition-transform duration-300 shadow-xl">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-4xl">forum</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">Network de Alto Nível</h3>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    Não é apenas um feed. É um espaço para conectar com quem está construindo soluções reais usando LLMs, Agentes e Vibe Coding.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col gap-4 rounded-2xl p-8 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:shadow-lg transition-all">
-                <span className="material-symbols-outlined text-primary text-4xl">school</span>
-                <h3 className="text-xl font-bold">Cursos Exclusivos</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Acesse nossa biblioteca premium de graça por 1 ano. Do básico ao deploy de Agentes Autônomos.</p>
+
+              {/* Courses Card */}
+              <div className="group relative overflow-hidden rounded-2xl p-8 bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:scale-105 transition-transform duration-300 shadow-xl">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-4xl">school</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">Cursos Exclusivos</h3>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    Acesse nossa biblioteca premium de graça por 1 ano. Do básico ao deploy de Agentes Autônomos.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col gap-4 rounded-2xl p-8 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:shadow-lg transition-all">
-                <span className="material-symbols-outlined text-primary text-4xl">emoji_events</span>
-                <h3 className="text-xl font-bold">Lives & Desafios</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Mentorias semanais ao vivo e hackathons internos com prêmios para os melhores projetos.</p>
+
+              {/* Lives Card */}
+              <div className="group relative overflow-hidden rounded-2xl p-8 bg-gradient-to-br from-amber-500 to-orange-600 text-white hover:scale-105 transition-transform duration-300 shadow-xl">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-4xl">emoji_events</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">Lives & Desafios</h3>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    Mentorias semanais ao vivo e hackathons internos com prêmios para os melhores projetos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Platform Preview */}
+          <section className="mb-16 sm:mb-24 scroll-animate">
+            <div className="text-center mb-12">
+              <div className="inline-block px-4 py-1.5 mb-4 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-bold text-sm">
+                👀 Veja por Dentro
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tighter mb-4">
+                Uma Plataforma Completa
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Tudo que você precisa para dominar IA em um só lugar
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 hover:shadow-2xl transition-shadow">
+                <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg mb-4 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-6xl text-primary">dashboard</span>
+                </div>
+                <h3 className="font-bold text-lg mb-2">Feed Inteligente</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Acompanhe projetos, compartilhe descobertas e conecte-se com outros builders
+                </p>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 hover:shadow-2xl transition-shadow">
+                <div className="aspect-video bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-lg mb-4 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-6xl text-green-600">auto_awesome</span>
+                </div>
+                <h3 className="font-bold text-lg mb-2">Guia de Ferramentas</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Curadoria completa das melhores ferramentas de IA com reviews e tutoriais
+                </p>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 hover:shadow-2xl transition-shadow">
+                <div className="aspect-video bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg mb-4 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-6xl text-purple-600">play_circle</span>
+                </div>
+                <h3 className="font-bold text-lg mb-2">Cursos Premium</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Do zero ao deploy: aprenda a construir agentes autônomos e aplicações com IA
+                </p>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 hover:shadow-2xl transition-shadow">
+                <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-lg mb-4 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-6xl text-amber-600">live_tv</span>
+                </div>
+                <h3 className="font-bold text-lg mb-2">Lives & Eventos</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Participe de lives exclusivas, hackathons e desafios com prêmios
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Testimonials */}
+          <section className="mb-16 sm:mb-24 scroll-animate">
+            <div className="text-center mb-12">
+              <div className="inline-block px-4 py-1.5 mb-4 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-bold text-sm">
+                💬 Depoimentos
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tighter mb-4">
+                O Que Nossos Membros Dizem
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Junte-se a profissionais que já estão transformando suas carreiras com IA
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-xl transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
+                    RC
+                  </div>
+                  <div>
+                    <p className="font-bold">Rafael Costa</p>
+                    <p className="text-sm text-gray-500">Desenvolvedor Full Stack</p>
+                  </div>
+                </div>
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="material-symbols-outlined text-amber-500 text-sm fill">star</span>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  "A comunidade é incrível! Aprendi mais em 2 meses aqui do que em 1 ano sozinho. Os cursos são práticos e direto ao ponto."
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-xl transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold">
+                    MS
+                  </div>
+                  <div>
+                    <p className="font-bold">Mariana Silva</p>
+                    <p className="text-sm text-gray-500">Product Manager</p>
+                  </div>
+                </div>
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="material-symbols-outlined text-amber-500 text-sm fill">star</span>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  "Networking de altíssimo nível. Conheci pessoas que estão construindo startups incríveis com IA. Valeu cada segundo!"
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-xl transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold">
+                    TA
+                  </div>
+                  <div>
+                    <p className="font-bold">Thiago Almeida</p>
+                    <p className="text-sm text-gray-500">Founder @ AI Startup</p>
+                  </div>
+                </div>
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="material-symbols-outlined text-amber-500 text-sm fill">star</span>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  "Encontrei meu co-founder aqui! A qualidade do conteúdo e das pessoas é incomparável. Recomendo 100%."
+                </p>
               </div>
             </div>
           </section>
@@ -205,15 +385,30 @@ const LandingPage: React.FC<LandingPageProps> = () => {
       <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-500">© 2024 Construindo com IA. Todos os direitos reservados.</p>
+            <p className="text-sm text-gray-500">© 2025 Construindo com IA. Todos os direitos reservados.</p>
             <div className="flex items-center gap-6">
-              <a className="text-sm text-gray-500 hover:text-primary transition-colors" href="#">Termos</a>
-              <a className="text-sm text-gray-500 hover:text-primary transition-colors" href="#">Privacidade</a>
-              <a className="text-sm text-gray-500 hover:text-primary transition-colors" href="#">Contato</a>
+              <button onClick={() => setShowTermsModal(true)} className="text-sm text-gray-500 hover:text-primary transition-colors">Termos</button>
+              <button onClick={() => setShowPrivacyModal(true)} className="text-sm text-gray-500 hover:text-primary transition-colors">Privacidade</button>
+              <button onClick={() => setShowContactModal(true)} className="text-sm text-gray-500 hover:text-primary transition-colors">Contato</button>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Modals */}
+      <ContactModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        onSubmit={handleContactSubmit}
+      />
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
+      <PrivacyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+      />
     </div>
   );
 };

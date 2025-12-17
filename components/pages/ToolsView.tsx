@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Tool, User } from '../../types';
 import { backend } from '../../services/backend';
@@ -12,6 +13,13 @@ const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
     const [tools, setTools] = useState<Tool[]>([]);
     const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Review states
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [userVotes, setUserVotes] = useState<string[]>([]);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+    const [submittingReview, setSubmittingReview] = useState(false);
 
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +35,61 @@ const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
             setLoading(false);
         });
     }, []);
+
+    // Load reviews when tool is selected
+    useEffect(() => {
+        if (selectedTool) {
+            loadReviews();
+        }
+    }, [selectedTool]);
+
+    const loadReviews = async () => {
+        if (!selectedTool) return;
+        try {
+            const data = await backend.getToolReviews(selectedTool.id);
+            setReviews(data);
+
+            if (currentUser) {
+                const reviewIds = data.map((r: any) => r.id);
+                const votes = await backend.getUserReviewVotes(currentUser.id, reviewIds);
+                setUserVotes(votes);
+            }
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+        }
+    };
+
+    const handleSubmitReview = async () => {
+        if (!currentUser || !selectedTool || !newReview.comment.trim()) return;
+
+        setSubmittingReview(true);
+        try {
+            await backend.submitToolReview(
+                selectedTool.id,
+                currentUser.id,
+                newReview.rating,
+                newReview.comment
+            );
+            setNewReview({ rating: 5, comment: '' });
+            setShowReviewForm(false);
+            await loadReviews();
+        } catch (error) {
+            console.error('Error submitting review:', error);
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
+    const handleVoteHelpful = async (reviewId: string) => {
+        if (!currentUser) return;
+
+        try {
+            await backend.voteReviewHelpful(reviewId, currentUser.id);
+            await loadReviews();
+        } catch (error) {
+            console.error('Error voting:', error);
+        }
+    };
 
     // Handle URL-based tool selection (SEO-friendly URLs)
     useEffect(() => {
@@ -401,6 +464,195 @@ const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Community Reviews Section */}
+                        <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-3xl p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-amber-500">reviews</span>
+                                    Avaliações da Comunidade
+                                </h2>
+                                {currentUser && !showReviewForm && (
+                                    <button
+                                        onClick={() => setShowReviewForm(true)}
+                                        className="bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors"
+                                    >
+                                        Avaliar Ferramenta
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Review Form */}
+                            {showReviewForm && currentUser && (
+                                <div className="mb-6 p-6 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                                    <h3 className="font-bold mb-4">Sua Avaliação</h3>
+
+                                    {/* Star Rating */}
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-bold mb-2">Nota</label>
+                                        <div className="flex gap-2">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button
+                                                    key={star}
+                                                    type="button"
+                                                    onClick={() => setNewReview({ ...newReview, rating: star })}
+                                                    className="transition-transform hover:scale-110"
+                                                >
+                                                    <span
+                                                        className={`material-symbols-outlined text-3xl ${star <= newReview.rating
+                                                                ? 'text-amber-500 fill'
+                                                                : 'text-gray-300 dark:text-gray-600'
+                                                            }`}
+                                                    >
+                                                        star
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Comment */}
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-bold mb-2">Comentário</label>
+                                        <textarea
+                                            rows={4}
+                                            value={newReview.comment}
+                                            onChange={e => setNewReview({ ...newReview, comment: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                                            placeholder="Compartilhe sua experiência com esta ferramenta..."
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleSubmitReview}
+                                            disabled={submittingReview || !newReview.comment.trim()}
+                                            className="bg-primary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {submittingReview ? 'Enviando...' : 'Publicar Avaliação'}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowReviewForm(false);
+                                                setNewReview({ rating: 5, comment: '' });
+                                            }}
+                                            className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold py-2 px-6 rounded-lg transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Reviews List */}
+                            {currentUser ? (
+                                reviews.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {reviews.map((review: any) => (
+                                            <div key={review.id} className="p-5 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                                <div className="flex items-start gap-4">
+                                                    <img
+                                                        src={review.profiles.avatar_url || `https://ui-avatars.com/api/?name=${review.profiles.name}`}
+                                                        alt={review.profiles.name}
+                                                        className="w-12 h-12 rounded-full"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div>
+                                                                <span className="font-bold text-gray-900 dark:text-white">{review.profiles.name}</span>
+                                                                <div className="flex items-center gap-1 mt-1">
+                                                                    {[...Array(5)].map((_, i) => (
+                                                                        <span
+                                                                            key={i}
+                                                                            className={`material-symbols-outlined !text-sm ${i < review.rating ? 'text-amber-500 fill' : 'text-gray-300'}`}
+                                                                        >
+                                                                            star
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-xs text-gray-400">
+                                                                {new Date(review.created_at).toLocaleDateString('pt-BR')}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{review.comment}</p>
+                                                        <div className="flex items-center gap-4">
+                                                            <button
+                                                                onClick={() => handleVoteHelpful(review.id)}
+                                                                className={`flex items-center gap-1 text-xs transition-colors ${userVotes.includes(review.id)
+                                                                        ? 'text-primary font-bold'
+                                                                        : 'text-gray-500 hover:text-primary'
+                                                                    }`}
+                                                            >
+                                                                <span className="material-symbols-outlined !text-sm">thumb_up</span>
+                                                                <span>Útil ({review.helpful_count})</span>
+                                                            </button>
+                                                            {currentUser.id === review.user_id && (
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        await backend.deleteToolReview(review.id, currentUser.id);
+                                                                        await loadReviews();
+                                                                    }}
+                                                                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600"
+                                                                >
+                                                                    <span className="material-symbols-outlined !text-sm">delete</span>
+                                                                    Excluir
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-700 mb-2 block">rate_review</span>
+                                        <p className="text-gray-500">Nenhuma avaliação ainda</p>
+                                        <p className="text-sm text-gray-400 mt-1">Seja o primeiro a avaliar!</p>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="relative">
+                                    {/* Blurred preview */}
+                                    <div className="space-y-4 blur-sm opacity-50 select-none" aria-hidden="true">
+                                        <div className="p-5 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                                    <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                                    <div className="h-3 w-3/4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="p-5 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                                    <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* CTA overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white/90 dark:from-card-dark/90 via-white/50 dark:via-card-dark/50 to-transparent">
+                                        <div className="text-center p-6">
+                                            <span className="material-symbols-outlined text-4xl text-primary mb-2">lock</span>
+                                            <p className="font-bold text-gray-900 dark:text-white mb-2">Avaliações exclusivas para membros</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Entre na comunidade para ver o que os membros estão falando!</p>
+                                            <button
+                                                onClick={() => window.location.href = '/login'}
+                                                className="bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-6 rounded-full transition-colors shadow-lg"
+                                            >
+                                                Entrar na Comunidade
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Right Column: Sidebar */}
@@ -444,9 +696,7 @@ const ToolsView: React.FC<ToolsViewProps> = ({ currentUser }) => {
                                             </div>
                                         </div>
                                         <p className="text-xs opacity-90">"Essa ferramenta salvou meu projeto. A integração é perfeita."</p>
-                                        <button className="w-full mt-4 bg-white text-indigo-700 font-bold py-2 rounded-lg text-sm hover:bg-indigo-50 transition-colors">
-                                            Ver Discussão Completa
-                                        </button>
+                                        <p className="text-xs font-bold mt-4">{reviews.length} avaliações da comunidade</p>
                                     </div>
                                 ) : (
                                     <div>

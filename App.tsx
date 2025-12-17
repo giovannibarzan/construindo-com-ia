@@ -319,7 +319,7 @@ const App: React.FC = () => {
                     <Route path="/courses" element={
                         <ProtectedRoute currentUser={currentUser}>
                             <MainLayout isDarkMode={isDarkMode} toggleTheme={toggleTheme} currentUser={currentUser} unreadCount={unreadCount}>
-                                <CoursesView />
+                                <CoursesView currentUser={currentUser} />
                             </MainLayout>
                         </ProtectedRoute>
                     } />
